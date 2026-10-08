@@ -7,7 +7,6 @@ pipeline {
             steps {
                 bat 'git rev-parse --show-toplevel'
                 bat 'docker --version'
-                bat 'docker compose version'
             }
         }
 
