@@ -48,11 +48,3 @@ The application currently runs through Docker Compose.
 | Backend API | 5001 |
 | PostgreSQL | 5433 |
 
-Environment secrets are stored in local .env files and are excluded from Git.
-
-## Security
-
-- Environment secrets are excluded from source control.
-- Public registration cannot assign privileged roles.
-- Role authorization is enforced server-side.
-- JWT-based authentication is used for protected APIs.
