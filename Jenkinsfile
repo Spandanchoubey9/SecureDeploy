@@ -10,6 +10,12 @@ pipeline {
             }
         }
 
+        stage('Test Backend') {
+            steps {
+                bat 'cd backend && npm ci && npm test'
+            }
+        }
+
         stage('Build Backend Image') {
             steps {
                 bat 'docker build -t securedeploy-backend:%BUILD_NUMBER% ./backend'
