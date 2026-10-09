@@ -1,10 +1,12 @@
+
 const express = require("express");
 
 const {
     getDeployments,
     createDeployment,
     getDeploymentById,
-    updateDeploymentStatus
+    updateDeploymentStatus,
+    updateDeploymentStatusFromJenkins
 } = require("../controllers/deploymentController");
 
 const authenticateToken =
@@ -15,75 +17,39 @@ const authorizeRoles =
 
 const router = express.Router();
 
-
-/*
-|--------------------------------------------------------------------------
-| Get deployments
-|--------------------------------------------------------------------------
-*/
+// Machine-authenticated callback. This route intentionally does not
+// use user JWT middleware; the controller verifies X-Jenkins-Token.
+router.put(
+    "/:id/jenkins-status",
+    updateDeploymentStatusFromJenkins
+);
 
 router.get(
     "/",
     authenticateToken,
-    authorizeRoles(
-        "ADMIN",
-        "MANAGER",
-        "EMPLOYEE"
-    ),
+    authorizeRoles("ADMIN", "MANAGER", "EMPLOYEE"),
     getDeployments
 );
-
-
-/*
-|--------------------------------------------------------------------------
-| Create deployment
-|--------------------------------------------------------------------------
-*/
 
 router.post(
     "/",
     authenticateToken,
-    authorizeRoles(
-        "ADMIN",
-        "MANAGER"
-    ),
+    authorizeRoles("ADMIN", "MANAGER"),
     createDeployment
 );
-
-
-/*
-|--------------------------------------------------------------------------
-| Get deployment by ID
-|--------------------------------------------------------------------------
-*/
 
 router.get(
     "/:id",
     authenticateToken,
-    authorizeRoles(
-        "ADMIN",
-        "MANAGER",
-        "EMPLOYEE"
-    ),
+    authorizeRoles("ADMIN", "MANAGER", "EMPLOYEE"),
     getDeploymentById
 );
-
-
-/*
-|--------------------------------------------------------------------------
-| Update deployment status
-|--------------------------------------------------------------------------
-*/
 
 router.put(
     "/:id/status",
     authenticateToken,
-    authorizeRoles(
-        "ADMIN",
-        "MANAGER"
-    ),
+    authorizeRoles("ADMIN", "MANAGER"),
     updateDeploymentStatus
 );
-
 
 module.exports = router;

@@ -43,6 +43,7 @@ services:
       JENKINS_JOB_NAME: SecureDeploy-CI-CD
       JENKINS_USERNAME: spandan
       JENKINS_API_TOKEN: ${JENKINS_API_TOKEN}
+      JENKINS_CALLBACK_SECRET: ${JENKINS_CALLBACK_SECRET}
 
     depends_on:
       - postgres
