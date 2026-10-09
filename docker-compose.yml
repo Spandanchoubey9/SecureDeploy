@@ -39,6 +39,10 @@ services:
       DB_NAME: ${POSTGRES_DB}
       JWT_SECRET: ${JWT_SECRET}
       PORT: 5000
+      JENKINS_URL: http://host.docker.internal:8080
+      JENKINS_JOB_NAME: SecureDeploy-CI-CD
+      JENKINS_USERNAME: spandan
+      JENKINS_API_TOKEN: ${JENKINS_API_TOKEN}
 
     depends_on:
       - postgres
