@@ -11,7 +11,7 @@ function AuditLogs() {
     const fetchLogs = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/audit",
+          "/api/audit",
           {
             headers: {
               Authorization: `Bearer ${token}`,
