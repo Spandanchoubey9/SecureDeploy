@@ -41,6 +41,37 @@ pipeline {
                 }
             }
         }
+        stage('Verify Callback Credential') {
+    steps {
+        withCredentials([
+            string(
+                credentialsId: 'securedeploy-callback-secret',
+                variable: 'CALLBACK_SECRET'
+            )
+        ]) {
+            powershell '''
+                $headers = @{
+                    "X-Jenkins-Token" = $env:CALLBACK_SECRET
+                }
+
+                try {
+                    Invoke-RestMethod `
+                        -Uri "$env:BACKEND_URL/api/deployments/2/jenkins-status" `
+                        -Method Put `
+                        -Headers $headers `
+                        -ContentType "application/json" `
+                        -Body '{"status":"BUILDING"}' `
+                        -ErrorAction Stop | Out-Null
+
+                    Write-Output "Callback authentication succeeded."
+                } catch {
+                    Write-Output "Callback authentication failed."
+                    throw
+                }
+            '''
+        }
+    }
+}
 
         stage('Mark Deployment Building') {
             steps {
