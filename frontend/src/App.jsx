@@ -18,7 +18,10 @@ import AuditLogs from "./pages/AuditLogs";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
-import { getDashboardStats } from "./services/api";
+import {
+  getDashboardStats,
+  createDeployment,
+} from "./services/api";
 
 
 /* =========================================================
@@ -38,6 +41,34 @@ function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [creatingDeployment, setCreatingDeployment] = useState(false);
+  const [deploymentMessage, setDeploymentMessage] = useState("");
+
+  const handleTriggerDeployment = async () => {
+  try {
+    setCreatingDeployment(true);
+    setDeploymentMessage("");
+
+    await createDeployment({
+      branch: "main",
+      commit_hash: "manual-trigger",
+      commit_message: "Manual deployment triggered from SecureDeploy Dashboard",
+      environment: "production",
+    });
+
+    setDeploymentMessage(
+      "Deployment request created successfully. Check the Deployments page for status."
+    );
+  } catch (err) {
+    console.error("Dashboard deployment failed:", err);
+
+    setDeploymentMessage(
+      err.response?.data?.message || "Unable to create deployment."
+    );
+  } finally {
+    setCreatingDeployment(false);
+  }
+};
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -118,10 +149,21 @@ function Dashboard() {
             infrastructure into one automated deployment workflow.
           </p>
 
-          <button className="deploy-button">
-            <span>▶</span>
-            Trigger Deployment
-          </button>
+          <button
+  type="button"
+  className="deploy-button"
+  onClick={handleTriggerDeployment}
+  disabled={creatingDeployment}
+>
+  <span>▶</span>
+  {creatingDeployment ? "Creating Deployment..." : "Trigger Deployment"}
+</button>
+
+{deploymentMessage && (
+  <p role="status" aria-live="polite">
+    {deploymentMessage}
+  </p>
+)}
         </div>
 
 
