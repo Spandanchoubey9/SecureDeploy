@@ -613,7 +613,7 @@ function App() {
       <Route path="/deployments" element={<Deployments />} />
       <Route path="/infrastructure" element={<Infrastructure />} />
       <Route path="/employees" element={<Employees />} />
-      <Route path="/audit" element={<AuditLogs />} />
+      <Route path="/audit-logs" element={<AuditLogs />} />
     </Route>
 
     <Route path="*" element={<Navigate to="/" replace />} />
