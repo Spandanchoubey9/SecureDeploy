@@ -9,13 +9,14 @@ const userRoutes = require("./routes/userRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
 const deploymentRoutes = require("./routes/deploymentRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const auditRoutes = require("./routes/auditRoutes");
 
 const app = express();
 
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-
+app.use("/api/audit", auditRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/deployments", deploymentRoutes);
 app.use("/api/users", userRoutes);

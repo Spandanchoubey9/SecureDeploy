@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/api";
+// import axios from "axios";
 
 function AuditLogs() {
   const [logs, setLogs] = useState([]);
@@ -10,14 +11,8 @@ function AuditLogs() {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const response = await axios.get(
-          "/api/audit",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await api.get("/audit");
+              setLogs(response.data.logs || []);
 
         setLogs(response.data.logs || []);
       } catch (error) {
