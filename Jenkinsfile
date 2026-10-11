@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -57,19 +56,15 @@ pipeline {
                         $headers = @{ "X-Jenkins-Token" = $env:CALLBACK_SECRET }
                         $payload = @{ status = "BUILDING" } | ConvertTo-Json -Compress
 
-                        try {
-                            Invoke-RestMethod `
-                                -Uri "$env:BACKEND_URL/api/deployments/$env:DEPLOYMENT_ID/jenkins-status" `
-                                -Method Put `
-                                -Headers $headers `
-                                -ContentType "application/json" `
-                                -Body $payload `
-                                -ErrorAction Stop | Out-Null
-                            Write-Output "Callback authentication succeeded."
-                        } catch {
-                            Write-Output "Callback authentication failed."
-                            throw
-                        }
+                        Invoke-RestMethod `
+                            -Uri "$env:BACKEND_URL/api/deployments/$env:DEPLOYMENT_ID/jenkins-status" `
+                            -Method Put `
+                            -Headers $headers `
+                            -ContentType "application/json" `
+                            -Body $payload `
+                            -ErrorAction Stop | Out-Null
+
+                        Write-Output "Callback authentication succeeded."
                     '''
                 }
             }
@@ -135,6 +130,20 @@ pipeline {
                             throw "Invalid deployment branch."
                         }
 
+                        # Restrict the temporary key to the Jenkins service account.
+                        $keyPath = $env:EC2_SSH_KEY
+                        $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+
+                        & icacls.exe $keyPath /inheritance:r
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "Could not disable inherited private-key permissions."
+                        }
+
+                        & icacls.exe $keyPath /grant:r "${currentUser}:(R)"
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "Could not grant the Jenkins service account read access."
+                        }
+
                         $remote = @"
 cd /home/ubuntu/SecureDeploy &&
 git fetch origin '$branch' &&
@@ -144,7 +153,7 @@ sudo docker compose -p securedeploy -f docker-compose.aws.yml up -d --no-deps ba
 "@
 
                         $sshArgs = @(
-                            "-i", $env:EC2_SSH_KEY,
+                            "-i", $keyPath,
                             "-o", "BatchMode=yes",
                             "-o", "StrictHostKeyChecking=accept-new",
                             "$env:AWS_USER@$env:AWS_HOST",
