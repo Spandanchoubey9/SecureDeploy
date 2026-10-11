@@ -45,9 +45,10 @@ pipeline {
                         $bytes = [System.Text.Encoding]::UTF8.GetBytes($env:CALLBACK_SECRET)
                         $sha = [System.Security.Cryptography.SHA256]::Create()
                         try {
-                            $fingerprint = [Convert]::ToHexString(
-                                $sha.ComputeHash($bytes)
-                            ).ToLower()
+                            $hashBytes = $sha.ComputeHash($bytes)
+                            $fingerprint = -join ($hashBytes | ForEach-Object {
+                                $_.ToString("x2")
+                            })
                             Write-Output "Jenkins callback secret SHA256: $fingerprint"
                         } finally {
                             $sha.Dispose()
