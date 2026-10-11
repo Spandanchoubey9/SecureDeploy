@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   getEmployees,
+  createEmployee,
   deleteEmployee,
 } from "../services/api";
 
@@ -8,6 +9,17 @@ function Employees() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formMessage, setFormMessage] = useState("");
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    department: "",
+    position: "",
+    salary: "",
+  });
 
   const loadEmployees = async () => {
     try {
@@ -15,28 +27,14 @@ function Employees() {
       setError("");
 
       const data = await getEmployees();
-
-      /*
-       * Backend may return either:
-       * { employees: [...] }
-       * or directly [...]
-       */
       const employeeList =
-        data?.employees ||
-        data?.data ||
-        data ||
-        [];
+        data?.employees || data?.data || data || [];
 
       setEmployees(
-        Array.isArray(employeeList)
-          ? employeeList
-          : []
+        Array.isArray(employeeList) ? employeeList : []
       );
     } catch (err) {
-      console.error(
-        "Employee loading error:",
-        err
-      );
+      console.error("Employee loading error:", err);
 
       setError(
         err.response?.data?.message ||
@@ -51,38 +49,71 @@ function Employees() {
     loadEmployees();
   }, []);
 
+  const handleAddEmployee = async (event) => {
+    event.preventDefault();
+
+    setSaving(true);
+    setFormMessage("");
+    setError("");
+
+    try {
+      await createEmployee({
+        ...formData,
+        salary:
+          formData.salary === ""
+            ? null
+            : Number(formData.salary),
+      });
+
+      setFormMessage("Employee added successfully.");
+
+      setFormData({
+        name: "",
+        email: "",
+        department: "",
+        position: "",
+        salary: "",
+      });
+
+      setShowAddForm(false);
+      await loadEmployees();
+    } catch (err) {
+      console.error("Employee creation error:", err);
+
+      setFormMessage(
+        err.response?.data?.message ||
+          "Unable to add employee. Check your permissions and try again."
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleDelete = async (id) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this employee?"
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     try {
       await deleteEmployee(id);
-
       await loadEmployees();
     } catch (err) {
-      console.error(
-        "Employee deletion error:",
-        err
-      );
+      console.error("Employee deletion error:", err);
 
-      alert(
+      window.alert(
         err.response?.data?.message ||
           "Unable to delete employee."
       );
     }
   };
 
-  const departmentCount =
-    new Set(
-      employees
-        .map((employee) => employee.department)
-        .filter(Boolean)
-    ).size;
+  const departmentCount = new Set(
+    employees
+      .map((employee) => employee.department)
+      .filter(Boolean)
+  ).size;
 
   return (
     <>
@@ -91,7 +122,6 @@ function Employees() {
           <p className="eyebrow">
             SECUREDEPLOY / WORKFORCE
           </p>
-
           <h1>Employees</h1>
         </div>
 
@@ -101,9 +131,7 @@ function Employees() {
             Production
           </div>
 
-          <div className="avatar">
-            AU
-          </div>
+          <div className="avatar">AU</div>
         </div>
       </header>
 
@@ -129,7 +157,6 @@ function Employees() {
         <div className="pipeline-preview">
           <div className="pipeline-title">
             <span>DATA FLOW</span>
-
             <span className="running">
               ● Connected
             </span>
@@ -171,10 +198,7 @@ function Employees() {
 
       {error && (
         <div className="error-banner">
-          <strong>
-            Employee API Error
-          </strong>
-
+          <strong>Employee API Error</strong>
           <span>{error}</span>
         </div>
       )}
@@ -182,22 +206,14 @@ function Employees() {
       <section className="stats-grid">
         <StatCard
           label="EMPLOYEES"
-          value={
-            loading
-              ? "—"
-              : employees.length
-          }
+          value={loading ? "—" : employees.length}
           change="LIVE"
           description="PostgreSQL records"
         />
 
         <StatCard
           label="DEPARTMENTS"
-          value={
-            loading
-              ? "—"
-              : departmentCount
-          }
+          value={loading ? "—" : departmentCount}
           change="LIVE"
           description="active departments"
         />
@@ -206,16 +222,12 @@ function Employees() {
           label="DATABASE"
           value={
             loading
-              ? "..."
+              ? "…"
               : error
-              ? "OFFLINE"
-              : "ONLINE"
+                ? "OFFLINE"
+                : "ONLINE"
           }
-          change={
-            error
-              ? "ERROR"
-              : "HEALTHY"
-          }
+          change={error ? "ERROR" : "HEALTHY"}
           description="SecureDeploy DB"
         />
 
@@ -234,23 +246,160 @@ function Employees() {
               <span className="eyebrow">
                 EMPLOYEE DIRECTORY
               </span>
-
-              <h3>
-                Workforce Records
-              </h3>
+              <h3>Workforce Records</h3>
             </div>
 
             <button
+              type="button"
               className="text-button"
               onClick={loadEmployees}
               disabled={loading}
             >
-              {loading
-                ? "Refreshing..."
-                : "Refresh →"}
+              {loading ? "Refreshing..." : "Refresh →"}
             </button>
           </div>
 
+          {/* Add Employee interface */}
+          <div style={{ margin: "16px 0" }}>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => {
+                setShowAddForm((current) => !current);
+                setFormMessage("");
+              }}
+              aria-expanded={showAddForm}
+            >
+              {showAddForm
+                ? "Cancel"
+                : "+ Add Employee"}
+            </button>
+
+            {formMessage && (
+              <p
+                role="status"
+                style={{ marginTop: 10 }}
+              >
+                {formMessage}
+              </p>
+            )}
+
+            {showAddForm && (
+              <form
+                onSubmit={handleAddEmployee}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: 12,
+                  marginTop: 16,
+                  padding: 20,
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 12,
+                }}
+              >
+                <input
+                  name="name"
+                  autoComplete="name"
+                  placeholder="Full name"
+                  value={formData.name}
+                  onChange={(event) =>
+                    setFormData({
+                      ...formData,
+                      name: event.target.value,
+                    })
+                  }
+                  required
+                />
+
+                <input
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="Email address"
+                  value={formData.email}
+                  onChange={(event) =>
+                    setFormData({
+                      ...formData,
+                      email: event.target.value,
+                    })
+                  }
+                  required
+                />
+
+                <input
+                  name="department"
+                  placeholder="Department"
+                  value={formData.department}
+                  onChange={(event) =>
+                    setFormData({
+                      ...formData,
+                      department: event.target.value,
+                    })
+                  }
+                  required
+                />
+
+                <input
+                  name="position"
+                  placeholder="Position"
+                  value={formData.position}
+                  onChange={(event) =>
+                    setFormData({
+                      ...formData,
+                      position: event.target.value,
+                    })
+                  }
+                  required
+                />
+
+                <input
+                  name="salary"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Salary (optional)"
+                  value={formData.salary}
+                  onChange={(event) =>
+                    setFormData({
+                      ...formData,
+                      salary: event.target.value,
+                    })
+                  }
+                />
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                  }}
+                >
+                  <button
+                    type="submit"
+                    disabled={saving}
+                  >
+                    {saving
+                      ? "Saving..."
+                      : "Save Employee"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="text-button"
+                    onClick={() =>
+                      setShowAddForm(false)
+                    }
+                    disabled={saving}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+
+          {/* Employee directory */}
           <div className="deployment-list">
             {loading ? (
               <>
@@ -260,8 +409,7 @@ function Employees() {
               </>
             ) : error ? (
               <div className="empty-state">
-                Unable to retrieve employee
-                records.
+                Unable to retrieve employee records.
               </div>
             ) : employees.length === 0 ? (
               <div className="empty-state">
@@ -285,22 +433,14 @@ function Employees() {
               <span className="eyebrow">
                 ACCESS CONTROL
               </span>
-
-              <h3>
-                Security Model
-              </h3>
+              <h3>Security Model</h3>
             </div>
           </div>
 
           <div className="resource">
             <div>
-              <strong>
-                Authentication
-              </strong>
-
-              <span>
-                JSON Web Token
-              </span>
+              <strong>Authentication</strong>
+              <span>JSON Web Token</span>
             </div>
 
             <div className="resource-status">
@@ -311,10 +451,7 @@ function Employees() {
 
           <div className="resource">
             <div>
-              <strong>
-                Read Employees
-              </strong>
-
+              <strong>Read Employees</strong>
               <span>
                 ADMIN / MANAGER / EMPLOYEE
               </span>
@@ -328,13 +465,8 @@ function Employees() {
 
           <div className="resource">
             <div>
-              <strong>
-                Update Employees
-              </strong>
-
-              <span>
-                ADMIN / MANAGER
-              </span>
+              <strong>Update Employees</strong>
+              <span>ADMIN / MANAGER</span>
             </div>
 
             <div className="resource-status">
@@ -345,13 +477,8 @@ function Employees() {
 
           <div className="resource">
             <div>
-              <strong>
-                Delete Employees
-              </strong>
-
-              <span>
-                ADMIN only
-              </span>
+              <strong>Delete Employees</strong>
+              <span>ADMIN only</span>
             </div>
 
             <div className="resource-status">
@@ -365,10 +492,7 @@ function Employees() {
   );
 }
 
-function EmployeeRow({
-  employee,
-  onDelete,
-}) {
+function EmployeeRow({ employee, onDelete }) {
   return (
     <div className="deployment-row">
       <div className="deployment-icon success">
@@ -384,21 +508,19 @@ function EmployeeRow({
 
         <div>
           <span>
-            {employee.email ||
-              "No email"}
+            {employee.email || "No email"}
           </span>
 
           <span>•</span>
 
           <span>
-            {employee.department ||
-              "No department"}
+            {employee.department || "No department"}
           </span>
         </div>
 
-        {employee.role && (
+        {employee.position && (
           <small className="activity-details">
-            Role: {employee.role}
+            Position: {employee.position}
           </small>
         )}
       </div>
@@ -406,6 +528,17 @@ function EmployeeRow({
       <div className="deployment-status success">
         Active
       </div>
+
+      <button
+        type="button"
+        className="text-button"
+        onClick={() => onDelete(employee.id)}
+        aria-label={`Delete ${
+          employee.name || "employee"
+        }`}
+      >
+        Delete
+      </button>
     </div>
   );
 }
@@ -414,48 +547,31 @@ function EmployeeSkeleton() {
   return (
     <div className="deployment-row">
       <div className="deployment-icon success">
-        ...
+        …
       </div>
 
       <div className="deployment-info">
-        <strong>
-          Loading employee...
-        </strong>
+        <strong>Loading employee...</strong>
 
         <div>
-          <span>
-            Fetching PostgreSQL data
-          </span>
+          <span>Fetching PostgreSQL data</span>
         </div>
       </div>
     </div>
   );
 }
 
-function PipelineStep({
-  number,
-  title,
-  status,
-}) {
+function PipelineStep({ number, title, status }) {
   return (
-    <div
-      className={`pipeline-step ${status}`}
-    >
-      <div className="step-number">
-        {number}
-      </div>
-
-      <div className="step-title">
-        {title}
-      </div>
+    <div className={`pipeline-step ${status}`}>
+      <div className="step-number">{number}</div>
+      <div className="step-title">{title}</div>
     </div>
   );
 }
 
 function PipelineLine() {
-  return (
-    <div className="pipeline-line"></div>
-  );
+  return <div className="pipeline-line"></div>;
 }
 
 function StatCard({
@@ -468,16 +584,11 @@ function StatCard({
     <div className="stat-card">
       <span>{label}</span>
 
-      <div className="stat-value">
-        {value}
-      </div>
+      <div className="stat-value">{value}</div>
 
       <div className="stat-footer">
         <strong>{change}</strong>
-
-        <small>
-          {description}
-        </small>
+        <small>{description}</small>
       </div>
     </div>
   );

@@ -1,12 +1,19 @@
-import { NavLink, Outlet } from "react-router-dom";
+
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 function Layout() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login", { replace: true });
+  };
+
   return (
     <div className="app-shell">
-
       {/* SIDEBAR */}
       <aside className="sidebar">
-
         <div className="brand">
           <div className="brand-icon">S</div>
 
@@ -17,7 +24,6 @@ function Layout() {
         </div>
 
         <nav className="navigation">
-
           <NavLink
             to="/"
             end
@@ -63,7 +69,6 @@ function Layout() {
           >
             Audit Logs
           </NavLink>
-
         </nav>
 
         <div className="sidebar-bottom">
@@ -74,16 +79,35 @@ function Layout() {
               <strong>System Operational</strong>
               <small>API connected</small>
             </div>
+            <button
+  type="button"
+  className="logout-button"
+  onClick={() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.replace("/login");
+  }}
+>
+  <span>↪</span>
+  Logout
+</button>
           </div>
-        </div>
 
+          <button
+            type="button"
+            className="logout-button"
+            onClick={handleLogout}
+          >
+            <span aria-hidden="true">↪</span>
+            Logout
+          </button>
+        </div>
       </aside>
 
       {/* PAGE CONTENT */}
       <main className="main-content">
         <Outlet />
       </main>
-
     </div>
   );
 }
