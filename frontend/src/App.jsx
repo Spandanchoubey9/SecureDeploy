@@ -15,6 +15,8 @@ import Deployments from "./pages/Deployments";
 import Infrastructure from "./pages/Infrastructure";
 import Employees from "./pages/Employees";
 import AuditLogs from "./pages/AuditLogs";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 import { getDashboardStats } from "./services/api";
 
@@ -22,6 +24,15 @@ import { getDashboardStats } from "./services/api";
 /* =========================================================
    DASHBOARD
 ========================================================= */
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
 
 function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -587,51 +598,27 @@ function ActivitySkeleton() {
 function App() {
   return (
     <BrowserRouter>
+  <Routes>
+    <Route path="/login" element={<Login />} />
+    <Route path="/register" element={<Register />} />
 
-      <Routes>
+    <Route
+      element={
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      }
+    >
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/deployments" element={<Deployments />} />
+      <Route path="/infrastructure" element={<Infrastructure />} />
+      <Route path="/employees" element={<Employees />} />
+      <Route path="/audit" element={<AuditLogs />} />
+    </Route>
 
-        {/* SHARED LAYOUT */}
-
-        <Route element={<Layout />}>
-
-          <Route
-            path="/"
-            element={<Dashboard />}
-          />
-
-          <Route
-            path="/deployments"
-            element={<Deployments />}
-          />
-
-          <Route
-            path="/infrastructure"
-            element={<Infrastructure />}
-          />
-
-          <Route
-            path="/employees"
-            element={<Employees />}
-          />
-
-          <Route
-            path="/audit-logs"
-            element={<AuditLogs />}
-          />
-
-        </Route>
-
-
-        {/* FALLBACK */}
-
-        <Route
-          path="*"
-          element={<Navigate to="/" replace />}
-        />
-
-      </Routes>
-
-    </BrowserRouter>
+    <Route path="*" element={<Navigate to="/" replace />} />
+  </Routes>
+</BrowserRouter>
   );
 }
 
