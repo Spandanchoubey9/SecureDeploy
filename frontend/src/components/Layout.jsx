@@ -1,4 +1,3 @@
-
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 function Layout() {
@@ -71,6 +70,7 @@ function Layout() {
           </NavLink>
         </nav>
 
+        {/* SIDEBAR FOOTER */}
         <div className="sidebar-bottom">
           <div className="system-status">
             <span className="status-dot"></span>
@@ -79,20 +79,9 @@ function Layout() {
               <strong>System Operational</strong>
               <small>API connected</small>
             </div>
-            <button
-  type="button"
-  className="logout-button"
-  onClick={() => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    window.location.replace("/login");
-  }}
->
-  <span>↪</span>
-  Logout
-</button>
           </div>
 
+          {/* SINGLE LOGOUT BUTTON */}
           <button
             type="button"
             className="logout-button"
