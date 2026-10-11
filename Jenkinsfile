@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -7,16 +8,8 @@ pipeline {
     }
 
     parameters {
-        string(
-            name: 'DEPLOYMENT_ID',
-            defaultValue: '',
-            description: 'SecureDeploy database deployment ID'
-        )
-        string(
-            name: 'DEPLOYMENT_BRANCH',
-            defaultValue: 'main',
-            description: 'Git branch to deploy'
-        )
+        string(name: 'DEPLOYMENT_ID', defaultValue: '', description: 'SecureDeploy database deployment ID')
+        string(name: 'DEPLOYMENT_BRANCH', defaultValue: 'main', description: 'Git branch to deploy')
     }
 
     environment {
@@ -34,54 +27,61 @@ pipeline {
                     if (!(params.DEPLOYMENT_ID ==~ /[0-9]+/)) {
                         error('A valid DEPLOYMENT_ID is required.')
                     }
-
                     if (!(params.DEPLOYMENT_BRANCH ==~ /[A-Za-z0-9][A-Za-z0-9._\/-]*/)) {
                         error('Invalid deployment branch name.')
                     }
                 }
             }
         }
+
         stage('Verify Callback Credential') {
-    steps {
-        withCredentials([
-            string(
-                credentialsId: 'securedeploy-callback-secret',
-                variable: 'CALLBACK_SECRET'
-            )
-        ]) {
-            powershell '''
-                $headers = @{
-                    "X-Jenkins-Token" = $env:CALLBACK_SECRET
-                }
+            steps {
+                withCredentials([string(
+                    credentialsId: 'securedeploy-callback-secret',
+                    variable: 'CALLBACK_SECRET'
+                )]) {
+                    powershell '''
+                        $ErrorActionPreference = "Stop"
+                        $bytes = [System.Text.Encoding]::UTF8.GetBytes($env:CALLBACK_SECRET)
+                        $sha = [System.Security.Cryptography.SHA256]::Create()
+                        try {
+                            $fingerprint = [Convert]::ToHexString(
+                                $sha.ComputeHash($bytes)
+                            ).ToLower()
+                            Write-Output "Jenkins callback secret SHA256: $fingerprint"
+                        } finally {
+                            $sha.Dispose()
+                        }
 
-                try {
-                    Invoke-RestMethod `
-                        -Uri "$env:BACKEND_URL/api/deployments/2/jenkins-status" `
-                        -Method Put `
-                        -Headers $headers `
-                        -ContentType "application/json" `
-                        -Body '{"status":"BUILDING"}' `
-                        -ErrorAction Stop | Out-Null
+                        $headers = @{ "X-Jenkins-Token" = $env:CALLBACK_SECRET }
+                        $payload = @{ status = "BUILDING" } | ConvertTo-Json -Compress
 
-                    Write-Output "Callback authentication succeeded."
-                } catch {
-                    Write-Output "Callback authentication failed."
-                    throw
+                        try {
+                            Invoke-RestMethod `
+                                -Uri "$env:BACKEND_URL/api/deployments/$env:DEPLOYMENT_ID/jenkins-status" `
+                                -Method Put `
+                                -Headers $headers `
+                                -ContentType "application/json" `
+                                -Body $payload `
+                                -ErrorAction Stop | Out-Null
+                            Write-Output "Callback authentication succeeded."
+                        } catch {
+                            Write-Output "Callback authentication failed."
+                            throw
+                        }
+                    '''
                 }
-            '''
+            }
         }
-    }
-}
 
         stage('Mark Deployment Building') {
             steps {
-                withCredentials([
-                    string(
-                        credentialsId: 'securedeploy-callback-secret',
-                        variable: 'CALLBACK_SECRET'
-                    )
-                ]) {
+                withCredentials([string(
+                    credentialsId: 'securedeploy-callback-secret',
+                    variable: 'CALLBACK_SECRET'
+                )]) {
                     powershell '''
+                        $ErrorActionPreference = "Stop"
                         $payload = @{ status = "BUILDING" } | ConvertTo-Json -Compress
                         $headers = @{ "X-Jenkins-Token" = $env:CALLBACK_SECRET }
 
@@ -122,16 +122,14 @@ pipeline {
 
         stage('Deploy to AWS EC2') {
             steps {
-                withCredentials([
-                    file(
-                        credentialsId: 'securedeploy-ec2-key',
-                        variable: 'EC2_SSH_KEY'
-                    )
-                ]) {
+                withCredentials([file(
+                    credentialsId: 'securedeploy-ec2-key',
+                    variable: 'EC2_SSH_KEY'
+                )]) {
                     powershell '''
                         $ErrorActionPreference = "Stop"
-
                         $branch = $env:DEPLOYMENT_BRANCH
+
                         if ($branch -notmatch '^[A-Za-z0-9][A-Za-z0-9._/-]*$') {
                             throw "Invalid deployment branch."
                         }
@@ -198,12 +196,10 @@ sudo docker compose -p securedeploy -f docker-compose.aws.yml up -d --no-deps ba
             echo 'SecureDeploy AWS deployment completed successfully.'
 
             script {
-                withCredentials([
-                    string(
-                        credentialsId: 'securedeploy-callback-secret',
-                        variable: 'CALLBACK_SECRET'
-                    )
-                ]) {
+                withCredentials([string(
+                    credentialsId: 'securedeploy-callback-secret',
+                    variable: 'CALLBACK_SECRET'
+                )]) {
                     powershell '''
                         $payload = @{ status = "SUCCESS" } | ConvertTo-Json -Compress
                         $headers = @{ "X-Jenkins-Token" = $env:CALLBACK_SECRET }
@@ -225,12 +221,10 @@ sudo docker compose -p securedeploy -f docker-compose.aws.yml up -d --no-deps ba
 
             script {
                 if (params.DEPLOYMENT_ID ==~ /[0-9]+/) {
-                    withCredentials([
-                        string(
-                            credentialsId: 'securedeploy-callback-secret',
-                            variable: 'CALLBACK_SECRET'
-                        )
-                    ]) {
+                    withCredentials([string(
+                        credentialsId: 'securedeploy-callback-secret',
+                        variable: 'CALLBACK_SECRET'
+                    )]) {
                         powershell '''
                             $payload = @{ status = "FAILED" } | ConvertTo-Json -Compress
                             $headers = @{ "X-Jenkins-Token" = $env:CALLBACK_SECRET }
