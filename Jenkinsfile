@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -21,21 +20,14 @@ pipeline {
     }
 
     environment {
-        BACKEND_URL = 'http://127.0.0.1:5001'
-        JENKINS_URL = 'http://host.docker.internal:8080'
-        JENKINS_JOB_NAME = 'SecureDeploy-CI-CD'
-        JENKINS_USERNAME = 'spandan'
+        AWS_HOST = '3.239.62.66'
+        AWS_USER = 'ubuntu'
+        AWS_APP_DIR = '/home/ubuntu/SecureDeploy'
+        AWS_APP_URL = 'http://3.239.62.66'
+        BACKEND_URL = 'http://3.239.62.66'
     }
 
     stages {
-        stage('Validate Project') {
-            steps {
-                bat 'git rev-parse --show-toplevel'
-                bat 'docker --version'
-                bat 'docker-compose version'
-            }
-        }
-
         stage('Validate Parameters') {
             steps {
                 script {
@@ -87,110 +79,92 @@ pipeline {
             }
         }
 
-        stage('Build Backend Image') {
-            steps {
-                bat 'docker build -t securedeploy-backend:%BUILD_NUMBER% ./backend'
-            }
-        }
-
-        stage('Build Frontend Image') {
-            steps {
-                bat 'docker build -t securedeploy-frontend:%BUILD_NUMBER% ./frontend'
-            }
-        }
-
-        stage('Validate Deployment Configuration') {
-            steps {
-                withCredentials([
-                    string(credentialsId: 'securedeploy-db-user', variable: 'POSTGRES_USER'),
-                    string(credentialsId: 'securedeploy-db-password', variable: 'POSTGRES_PASSWORD'),
-                    string(credentialsId: 'securedeploy-db-name', variable: 'POSTGRES_DB'),
-                    string(credentialsId: 'securedeploy-jwt-secret', variable: 'JWT_SECRET'),
-                    string(credentialsId: 'securedeploy-jenkins-api-token', variable: 'JENKINS_API_TOKEN'),
-                    string(credentialsId: 'securedeploy-callback-secret', variable: 'JENKINS_CALLBACK_SECRET')
-                ]) {
-                    bat 'docker-compose -p securedeploy -f docker-compose.deploy.yml config -q'
-                }
-            }
-        }
-
-        stage('Deploy Application') {
-            steps {
-                withCredentials([
-                    string(credentialsId: 'securedeploy-db-user', variable: 'POSTGRES_USER'),
-                    string(credentialsId: 'securedeploy-db-password', variable: 'POSTGRES_PASSWORD'),
-                    string(credentialsId: 'securedeploy-db-name', variable: 'POSTGRES_DB'),
-                    string(credentialsId: 'securedeploy-jwt-secret', variable: 'JWT_SECRET'),
-                    string(credentialsId: 'securedeploy-jenkins-api-token', variable: 'JENKINS_API_TOKEN'),
-                    string(credentialsId: 'securedeploy-callback-secret', variable: 'JENKINS_CALLBACK_SECRET')
-                ]) {
-                    bat 'docker-compose -p securedeploy -f docker-compose.deploy.yml stop backend frontend'
-                    bat 'docker-compose -p securedeploy -f docker-compose.deploy.yml rm -f backend frontend'
-                    bat 'docker-compose -p securedeploy -f docker-compose.deploy.yml up -d --no-deps backend frontend'
-                }
-            }
-        }
-
-        stage('Health Check') {
+        stage('Validate AWS Compose') {
             steps {
                 powershell '''
-                    $deadline = (Get-Date).AddSeconds(60)
-                    $backendReady = $false
-                    $frontendReady = $false
-
-                    while ((Get-Date) -lt $deadline) {
-                        try {
-                            $response = Invoke-WebRequest `
-                                -Uri "http://127.0.0.1:5001/health" `
-                                -TimeoutSec 3 `
-                                -UseBasicParsing
-                            if ($response.StatusCode -eq 200) {
-                                $backendReady = $true
-                            }
-                        } catch {}
-
-                        try {
-                            $response = Invoke-WebRequest `
-                                -Uri "http://127.0.0.1:5173/" `
-                                -TimeoutSec 3 `
-                                -UseBasicParsing
-                            if ($response.StatusCode -eq 200) {
-                                $frontendReady = $true
-                            }
-                        } catch {}
-
-                        if ($backendReady -and $frontendReady) {
-                            break
-                        }
-
-                        Start-Sleep -Seconds 3
+                    if (-not (Test-Path "docker-compose.aws.yml")) {
+                        throw "docker-compose.aws.yml is missing."
                     }
-
-                    if (-not $backendReady) {
-                        throw "Backend health check failed."
-                    }
-
-                    if (-not $frontendReady) {
-                        throw "Frontend health check failed."
-                    }
-
-                    Write-Output "Backend and frontend health checks passed."
                 '''
             }
         }
 
-        stage('Deployment Verification') {
+        stage('Deploy to AWS EC2') {
             steps {
-                bat 'docker ps --filter "name=securedeploy-backend"'
-                bat 'docker ps --filter "name=securedeploy-frontend"'
-                bat 'docker ps --filter "name=securedeploy-postgres"'
+                withCredentials([
+                    file(
+                        credentialsId: 'securedeploy-ec2-key',
+                        variable: 'EC2_SSH_KEY'
+                    )
+                ]) {
+                    powershell '''
+                        $ErrorActionPreference = "Stop"
+
+                        $branch = $env:DEPLOYMENT_BRANCH
+                        if ($branch -notmatch '^[A-Za-z0-9][A-Za-z0-9._/-]*$') {
+                            throw "Invalid deployment branch."
+                        }
+
+                        $remote = @"
+cd /home/ubuntu/SecureDeploy &&
+git fetch origin '$branch' &&
+git checkout --force -B '$branch' 'origin/$branch' &&
+sudo docker compose -p securedeploy -f docker-compose.aws.yml build backend frontend &&
+sudo docker compose -p securedeploy -f docker-compose.aws.yml up -d --no-deps backend frontend
+"@
+
+                        $sshArgs = @(
+                            "-i", $env:EC2_SSH_KEY,
+                            "-o", "BatchMode=yes",
+                            "-o", "StrictHostKeyChecking=accept-new",
+                            "$env:AWS_USER@$env:AWS_HOST",
+                            $remote
+                        )
+
+                        & ssh @sshArgs
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "SSH deployment to AWS failed."
+                        }
+                    '''
+                }
+            }
+        }
+
+        stage('AWS Health Check') {
+            steps {
+                powershell '''
+                    $deadline = (Get-Date).AddSeconds(90)
+                    $ready = $false
+
+                    while ((Get-Date) -lt $deadline) {
+                        try {
+                            $response = Invoke-WebRequest `
+                                -Uri $env:AWS_APP_URL `
+                                -TimeoutSec 5 `
+                                -UseBasicParsing
+
+                            if ($response.StatusCode -eq 200) {
+                                $ready = $true
+                                break
+                            }
+                        } catch {}
+
+                        Start-Sleep -Seconds 5
+                    }
+
+                    if (-not $ready) {
+                        throw "AWS frontend health check failed."
+                    }
+
+                    Write-Output "AWS frontend returned HTTP 200."
+                '''
             }
         }
     }
 
     post {
         success {
-            echo 'SecureDeploy CI/CD pipeline completed successfully.'
+            echo 'SecureDeploy AWS deployment completed successfully.'
 
             script {
                 withCredentials([
@@ -216,7 +190,7 @@ pipeline {
         }
 
         failure {
-            echo 'SecureDeploy CI/CD pipeline failed.'
+            echo 'SecureDeploy AWS deployment failed.'
 
             script {
                 if (params.DEPLOYMENT_ID ==~ /[0-9]+/) {
