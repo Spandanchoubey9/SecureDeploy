@@ -12,11 +12,11 @@
     }
 
     environment {
-        AWS_HOST = '98.80.179.203'
+        AWS_HOST = '34.231.28.186'
         AWS_USER = 'ubuntu'
         AWS_APP_DIR = '/home/ubuntu/SecureDeploy'
-        AWS_APP_URL = 'http://98.80.179.203'
-        BACKEND_URL = 'http://98.80.179.203'
+        AWS_APP_URL = 'http://34.231.28.186'
+        BACKEND_URL = 'http://34.231.28.186'
     }
 
     stages {
@@ -262,4 +262,5 @@ sudo docker compose -p securedeploy -f docker-compose.aws.yml up -d --no-deps ba
         }
     }
 }
+
 
