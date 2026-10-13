@@ -1,4 +1,4 @@
-pipeline {
+﻿pipeline {
     agent any
 
     options {
@@ -12,11 +12,11 @@ pipeline {
     }
 
     environment {
-        AWS_HOST = '3.239.62.66'
+        AWS_HOST = '98.80.179.203'
         AWS_USER = 'ubuntu'
         AWS_APP_DIR = '/home/ubuntu/SecureDeploy'
-        AWS_APP_URL = 'http://3.239.62.66'
-        BACKEND_URL = 'http://3.239.62.66'
+        AWS_APP_URL = 'http://98.80.179.203'
+        BACKEND_URL = 'http://98.80.179.203'
     }
 
     stages {
@@ -262,3 +262,4 @@ sudo docker compose -p securedeploy -f docker-compose.aws.yml up -d --no-deps ba
         }
     }
 }
+
