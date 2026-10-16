@@ -1,184 +1,336 @@
-﻿<div align="center">
+﻿
+<div align="center">
 
-SecureDeploy
-Ship with confidence. See what happens after the deploy.
-A cloud-native deployment and operations platform for connecting source code to repeatable deployments, tracking release health, and bringing deployment diagnostics and infrastructure visibility into one place.
-<p>
-  <img alt="React" src="https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?logo=react&logoColor=20232A">
-  <img alt="Node.js" src="https://img.shields.io/badge/API-Node.js%20%2B%20Express-339933?logo=nodedotjs&logoColor=white">
-  <img alt="PostgreSQL" src="https://img.shields.io/badge/Database-PostgreSQL-4169E1?logo=postgresql&logoColor=white">
-  <img alt="Docker" src="https://img.shields.io/badge/Containers-Docker-2496ED?logo=docker&logoColor=white">
-  <img alt="AWS" src="https://img.shields.io/badge/Cloud-AWS-232F3E?logo=amazonaws&logoColor=white">
-  <img alt="CI%2FCD" src="https://img.shields.io/badge/CI%2FCD-Jenkins-D24939?logo=jenkins&logoColor=white">
-</p>
+# ⚡ SecureDeploy
 
-Built to evolve from a deployment dashboard into a multi-user application delivery and maintenance platform.
+### Ship Faster. Deploy Reliably. Monitor Everything.
+
+A cloud-native deployment and operations platform designed to simplify application delivery, automate CI/CD workflows, and bring deployment health and diagnostics into one unified dashboard.
+
+<br/>
+
+![React](https://img.shields.io/badge/React-2026-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Node.js](https://img.shields.io/badge/Node.js-Backend-339933?style=flat-square&logo=nodedotjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Containers-2496ED?style=flat-square&logo=docker&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS-Cloud-FF9900?style=flat-square&logo=amazonaws&logoColor=white)
+![Jenkins](https://img.shields.io/badge/Jenkins-CI%2FCD-D24939?style=flat-square&logo=jenkins&logoColor=white)
+
+<br/>
+
+**[Repository](https://github.com/Spandanchoubey9/SecureDeploy)** · **Cloud-Native Engineering** · **DevOps Automation**
+
 </div>
 
-The problem
-Deploying an application is only one part of running it. Teams also need to know whether a release passed its pipeline, whether the application is responding, what failed, and where to look when something goes wrong. These signals are often spread across CI/CD logs, cloud dashboards, containers, and application output.
-SecureDeploy brings deployment activity and operational visibility into one workflow. The project combines a web dashboard, backend API, PostgreSQL persistence, containerized services, and a Jenkins-based delivery workflow, with a roadmap toward isolated, multi-user project management and deeper monitoring.
-Project status: This repository is an evolving engineering project. The current implementation provides the foundation for deployment management and CI/CD integration; several capabilities described in the roadmap are planned work, not claims of completed functionality.
+---
 
-At a glance
-Area	Current foundation	Direction
-Application dashboard	React-based interface	Project-centric overview and operational summaries
-API and persistence	Express backend with PostgreSQL	Tenant-aware APIs, authorization, and auditability
-Delivery automation	Jenkins pipeline integration	GitHub-triggered, repeatable project deployments
-Runtime packaging	Docker / Docker Compose	Safer, isolated deployment targets
-Cloud hosting	AWS EC2 deployment environment	Managed infrastructure and CloudWatch-backed visibility
-Diagnostics	Deployment status and pipeline workflow	Correlated logs, errors, health checks, and release diagnostics
+## Overview
 
+Modern application delivery involves more than building and deploying code. Developers must coordinate CI/CD pipelines, manage deployment state, verify application availability, investigate failures, and understand infrastructure health.
 
-Architecture
+**SecureDeploy aims to bring these workflows together in one platform.**
+
+Built with React, Node.js, PostgreSQL, Docker, Jenkins, and AWS, SecureDeploy provides a foundation for deployment management and cloud-native operations. Its long-term goal is to let developers manage their own application projects, automate releases from GitHub, and investigate deployment and runtime issues without jumping between multiple tools.
+
+> **Project status:** Deployment management, the application stack, and CI/CD integration form the current foundation. Multi-user project isolation, GitHub webhook automation, and comprehensive monitoring are planned extensions unless verified as implemented in the repository.
+
+## Why SecureDeploy?
+
+| Traditional workflow | SecureDeploy's goal |
+|---|---|
+| Deployment information is spread across tools | Centralized deployment visibility |
+| Manual releases are difficult to reproduce | Repeatable CI/CD workflows |
+| Successful builds can still produce unhealthy releases | Post-deployment health validation |
+| Failures require searching multiple logs | Unified deployment diagnostics |
+| Infrastructure issues are difficult to correlate with releases | Infrastructure and application observability |
+| Every application needs a separate operational workflow | Project-centric application management |
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TB
+    DEV["Developer"]
+    GH["GitHub Repository"]
+
+    subgraph PLATFORM["SecureDeploy Platform"]
+        UI["React + Vite Dashboard"]
+        API["Node.js + Express API"]
+        DB[("PostgreSQL")]
+        HISTORY["Deployment History & Audit Data"]
+
+        UI <--> API
+        API <--> DB
+        DB --> HISTORY
+    end
+
+    CI["Jenkins CI/CD"]
+    VALIDATE["Validate & Test"]
+    DEPLOY["Docker-based Deployment"]
+    APP["Application on AWS EC2"]
+    HEALTH["Health Checks"]
+    CW["Amazon CloudWatch"]
+
+    DEV --> UI
+    API --> CI
+    CI --> VALIDATE
+    VALIDATE --> DEPLOY
+    DEPLOY --> APP
+    APP --> HEALTH
+    HEALTH --> API
+
+    GH -. "Planned webhook trigger" .-> CI
+    APP -. "Planned metrics and logs" .-> CW
+
+    classDef frontend fill:#172554,stroke:#60A5FA,color:#FFFFFF
+    classDef backend fill:#164E63,stroke:#22D3EE,color:#FFFFFF
+    classDef infrastructure fill:#422006,stroke:#F59E0B,color:#FFFFFF
+    class UI frontend
+    class API,DB,HISTORY backend
+    class CI,VALIDATE,DEPLOY,APP,HEALTH,CW infrastructure
+```
+
+### Technology Stack
+
+| Component | Technology | Purpose |
+|---|---|---|
+| Frontend | React, Vite | Interactive deployment and operations dashboard |
+| Backend | Node.js, Express | API layer and application logic |
+| Database | PostgreSQL | Persistent application and deployment data |
+| Containerization | Docker, Docker Compose | Consistent service environments |
+| CI/CD | Jenkins | Pipeline orchestration and deployment automation |
+| Cloud infrastructure | AWS EC2 | Application hosting |
+| Observability | Amazon CloudWatch — planned expansion | Infrastructure metrics, logs, and alarms |
+
+---
+
+## Core Capabilities
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🚀 Deployment Management
+
+- Deployment history and status visibility
+- Persistent deployment records
+- A foundation for release tracking
+- Planned project-specific deployment configuration
+
+</td>
+<td width="50%" valign="top">
+
+### 🔄 CI/CD Automation
+
+- Jenkins pipeline integration
+- Automated validation and deployment stages
+- Pipeline result reporting
+- Planned GitHub webhook triggers
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### ☁️ Cloud-Native Infrastructure
+
+- AWS EC2 deployment environment
+- Docker-based application services
+- Docker Compose configuration
+- Planned infrastructure metrics and alerting
+
+</td>
+<td width="50%" valign="top">
+
+### 📊 Operational Intelligence
+
+- Planned system health monitoring
+- Backend error tracking
+- Infrastructure visibility
+- Deployment diagnostics and health correlation
+
+</td>
+</tr>
+</table>
+
+---
+
+## Deployment Lifecycle
+
+The intended end-to-end workflow connects source code, pipeline execution, deployment, and runtime validation.
+
 ```mermaid
 flowchart LR
-    U[Developer / Project Owner] --> UI[React + Vite Dashboard]
-    UI --> API[Node.js + Express API]
-    API --> DB[(PostgreSQL)]
-    API --> CI[Jenkins CI/CD]
-    GH[GitHub Repository] -. planned webhook trigger .-> CI
-    CI --> TEST[Test and Validation]
-    TEST --> DEPLOY[Docker-based Deployment]
-    DEPLOY --> APP[Application on AWS EC2]
-    APP --> HC[Health Check]
-    HC --> API
-    APP -. planned metrics and logs .-> CW[Amazon CloudWatch]
-    API --> AUDIT[(Deployment and Audit Records)]
+    A["1. Source Code"] --> B["2. Trigger Release"]
+    B --> C["3. Build & Test"]
+    C --> D["4. Deploy"]
+    D --> E["5. Health Check"]
+    E --> F["6. Report Status"]
+    F --> G["7. Monitor"]
+
+    classDef step fill:#0F172A,stroke:#64748B,color:#FFFFFF
+    class A,B,C,D,E,F,G step
 ```
-The diagram shows the intended end-to-end direction. GitHub webhook automation, multi-tenant project isolation, and full CloudWatch/application monitoring should be treated as roadmap items unless verified in the current code.
-Technology choices
-- React + Vite — dashboard UI and fast frontend development.
-- Node.js + Express — API endpoints and orchestration between the dashboard, database, and delivery workflow.
-- PostgreSQL — persistent application data, including users, deployments, and audit-related records in the current project foundation.
-- Docker + Docker Compose — repeatable local and server-side service environments.
-- Jenkins — pipeline orchestration for validation, deployment, health checks, and status callbacks.
-- AWS EC2 — cloud-hosted application environment.
-- Amazon CloudWatch (planned expansion) — infrastructure metrics, logs, alarms, and operational signals.
-What the platform is designed to do
-1. Deployment lifecycle visibility
-Track deployment records and outcomes from a single dashboard. The intended workflow connects a project and source revision to pipeline execution, deployment status, and post-deployment validation.
-2. CI/CD integration
-Use Jenkins to automate repeatable delivery tasks rather than relying on manual server changes. The pipeline direction includes validation, tests, deployment, health checks, and reporting the outcome back to SecureDeploy.
-3. Operational monitoring — planned expansion
-Bring together system health and runtime signals, rather than treating a successful build as proof that an application is healthy.
-- System health: API and database availability, Jenkins connectivity, application reachability, response time, and last-check timestamps.
-- Error monitoring: backend exceptions, failed requests, failed deployments, and actionable error context.
-- Infrastructure monitoring: CPU, memory, disk, network, and container status.
-- Deployment diagnostics: build duration, pipeline stages, relevant logs, deployment output, and health-check results.
-These are target capabilities; the completeness of each signal depends on implementation and configuration.
-4. Multi-user deployment platform — planned expansion
-The longer-term goal is for other developers to use SecureDeploy for their own applications, not just to operate SecureDeploy itself. A project owner should be able to connect a repository, configure a branch and deployment target, trigger a release, and inspect its status and diagnostics.
-Roadmap
-The roadmap is deliberately incremental: establish trustworthy project boundaries first, then automate delivery, then add richer observability.
-<details>
-<summary><strong>Phase 1 — Product and data foundations</strong></summary>
 
-- Refine the dashboard around projects, releases, operational status, and recent activity.
-- Audit existing API routes, database schema, and pipeline contracts before adding new abstractions.
-- Define consistent deployment states, timestamps, error details, and audit events.
-- Document setup and configuration based on the actual repository scripts and environment variables.
-</details>
+| Stage | Intended responsibility |
+|---|---|
+| Source | Identify the repository, branch, and revision |
+| Trigger | Start a release manually or through a future GitHub webhook |
+| Build & Test | Execute the configured Jenkins pipeline stages |
+| Deploy | Deploy to an authorized target |
+| Health Check | Verify that the application responds after deployment |
+| Report | Associate results with the corresponding deployment record |
+| Monitor | Correlate runtime health, errors, and infrastructure signals |
 
-<details>
-<summary><strong>Phase 2 — Multi-user workspaces and projects</strong></summary>
+The exact workflow depends on the current Jenkinsfile and integration configuration. The diagram represents the target lifecycle, not a claim that every stage is already fully automated.
 
-- Add workspace/project ownership and server-enforced access control.
-- Build project creation and configuration for repository URL, branch, runtime/build settings, and authorized target.
-- Scope deployments, logs, settings, and credentials to the correct project and user.
-- Add validation, quotas, and clear permission boundaries.
-</details>
+---
 
-<details>
-<summary><strong>Phase 3 — Automated delivery</strong></summary>
+## Roadmap
 
-- Add GitHub webhook-triggered workflows and repository connection management.
-- Move CI/CD execution to an always-on runner or hosted CI/CD service; avoid depending on a developer laptop being online.
-- Associate each pipeline run with the correct project, commit, and deployment record.
-- Report stage results, logs, duration, health-check outcome, and failure reason to the dashboard.
-- Make retries and duplicate webhook delivery safe and observable.
-</details>
+The development strategy is to evolve SecureDeploy from a deployment dashboard into a **multi-user application delivery and maintenance platform**.
 
-<details>
-<summary><strong>Phase 4 — Health, errors, and infrastructure observability</strong></summary>
+### 01 — Deployment Foundations
+- Improve deployment status consistency and history.
+- Standardize pipeline result reporting and failure details.
+- Refine API, database, and callback integration.
+- Improve setup instructions and error visibility.
 
-- Add scheduled application health checks and response-time history.
-- Capture structured backend errors and failed-request context.
-- Integrate CloudWatch metrics and logs for relevant AWS resources.
-- Add configurable alarms for meaningful service degradation.
-- Correlate a deployment with post-release health and error signals.
-</details>
+### 02 — Multi-User Projects
+- Create and manage multiple application projects.
+- Connect GitHub repositories and configure branches.
+- Associate projects and deployments with their owners.
+- Enforce project-level authorization.
+- Isolate logs, settings, credentials, and deployment history.
 
-<details>
-<summary><strong>Phase 5 — Security and production readiness</strong></summary>
+### 03 — Automated CI/CD
+- Integrate GitHub webhooks.
+- Use an always-on CI/CD runner or hosted pipeline service.
+- Associate pipeline runs with the correct project and commit.
+- Display pipeline stages, execution duration, and failure details.
+- Add reliable callbacks, retry handling, and post-deployment validation.
 
-- Enforce tenant isolation at the API and data-access layers.
-- Store secrets server-side and never expose them in browser responses or logs.
-- Isolate build and deployment execution; restrict permissions and target access.
-- Add HTTPS, secure session/token handling, rate limits, audit trails, backups, and recovery procedures.
-- Add deployment quotas, resource controls, and clear AWS cost safeguards.
-</details>
+### 04 — Monitoring & Diagnostics
+- **System health:** API, database, Jenkins, application availability, and response time.
+- **Error monitoring:** Backend exceptions, failed requests, and deployment failures.
+- **Infrastructure monitoring:** CPU, memory, disk, network, and container status.
+- **Deployment diagnostics:** Pipeline logs, stage duration, deployment output, and health-check results.
+- **CloudWatch integration:** Metrics, logs, and configurable alarms for supported AWS resources.
 
-Security and reliability principles
-SecureDeploy's goal is not simply to make deployment possible; it is to make deployment controlled, traceable, and diagnosable.
-- Server-side authorization: UI hiding is not access control. Every project, deployment, log, and settings request must be authorized by the backend.
-- Tenant isolation: one user must not be able to enumerate or access another user's projects, releases, logs, or secrets.
-- Least privilege: AWS and CI/CD credentials should have only the permissions needed for their task.
-- Secret hygiene: keep credentials in environment configuration or a dedicated secret store; never commit .env files, private keys, API tokens, or callback secrets.
-- Safe execution: do not execute arbitrary user-provided shell commands on the host. Build and deploy workloads need explicit boundaries and resource limits.
-- Restricted infrastructure: database, backend, and Jenkins administration interfaces should not be exposed publicly without a deliberate, secure access design.
-- Observable outcomes: record the release, pipeline result, health-check result, and failure context so that a failed deployment can be investigated.
-These are design requirements and hardening goals; they should not be interpreted as a security certification.
-Running the project locally
-The exact commands and environment variable names can change with the repository. Check the current package.json scripts and Compose files before running these examples.
-Prerequisites
+### 05 — Production Readiness
+- Tenant isolation and server-side authorization.
+- Secure credential and integration management.
+- Isolated build and deployment execution.
+- HTTPS, rate limits, and audit trails.
+- Backups, recovery procedures, resource quotas, and AWS cost controls.
+
+---
+
+## Security & Reliability
+
+SecureDeploy is intended to manage application deployments safely, not merely trigger commands on a server.
+
+| Principle | Engineering objective |
+|---|---|
+| Access control | Enforce authorization on every protected API operation |
+| Tenant isolation | Prevent users from accessing other users' projects and data |
+| Least privilege | Limit AWS and CI/CD permissions to required operations |
+| Secret protection | Keep tokens, private keys, and environment secrets out of source control |
+| Safe execution | Isolate deployment workloads and restrict arbitrary command execution |
+| Infrastructure security | Restrict public access to databases and administrative interfaces |
+| Auditability | Record meaningful deployment actions and state changes |
+| Cost awareness | Apply quotas, monitoring, and resource-lifecycle controls |
+
+These are implementation and production-hardening objectives, not a claim of formal security certification.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
 - Git
 - Node.js and npm
-- Docker Desktop with Docker Compose
+- Docker Desktop and Docker Compose
 - Access to the configured PostgreSQL service
-- Jenkins and AWS credentials only if testing those integrations
-Get the source
+- AWS and Jenkins configuration for testing the corresponding integrations
+
+### 1. Clone the repository
+
+```bash
 git clone https://github.com/Spandanchoubey9/SecureDeploy.git
 cd SecureDeploy
-Start services
-If the repository's root docker-compose.yml defines the required local services, use:
+```
+
+### 2. Configure the environment
+
+Review the environment example files and Compose configuration in the repository.
+
+- Configure the PostgreSQL connection.
+- Set required application secrets locally.
+- Configure Jenkins and AWS integrations only if needed.
+- Never commit real credentials, private keys, or `.env` files.
+
+### 3. Start the application
+
+If the root Compose file defines the required local services:
+
+```bash
 docker compose up --build
-Otherwise, start the backend and frontend using the scripts documented in their respective package.json files and configure the database connection using your local environment file.
-Configuration checklist
-1. Create local environment files from the project's example files, if provided.
-2. Configure the PostgreSQL connection string and required application secrets locally.
-3. Verify which host ports are configured in the Compose file before starting services.
-4. Keep real credentials out of Git; do not paste tokens or private keys into issues or documentation.
-5. Start with the core application before configuring optional AWS or Jenkins integrations.
-Deployment environment
-The project has been exercised with an AWS EC2-based environment and a Docker Compose deployment configuration. The exact public endpoint and current instance state can change, so no live availability is implied by this README.
-For a deployment environment, verify the following before exposing the application:
-- Frontend traffic is served over HTTPS in production.
-- Backend and database ports are not publicly reachable unless explicitly required and protected.
-- Environment variables and credentials are configured on the host, not committed to source control.
-- Health checks validate the application after deployment.
-- Persistent database storage is backed up and retained during routine container updates.
-- AWS budgets, billing alerts, and resource cleanup procedures are configured.
-Suggested project structure
-The repository's actual structure is authoritative; this is a conceptual view of the main responsibilities, not a guarantee that every path exists.
-SecureDeploy/
-├── frontend/          # React + Vite dashboard
-├── backend/           # Express API and business logic
-├── Jenkinsfile        # CI/CD pipeline definition
-├── docker-compose.aws.yml
-└── README.md
-Engineering challenges this project explores
-- Coordinating asynchronous CI/CD execution with persistent deployment records.
-- Keeping deployment state consistent between a dashboard, API, database, and pipeline callbacks.
-- Separating a successful build from a healthy running release.
-- Designing a project model that can evolve from a single deployment environment to multi-user use.
-- Turning infrastructure and application signals into useful operational diagnostics.
-- Applying secure defaults to credentials, cloud access, deployment targets, and tenant boundaries.
-Future direction
-The intended end state is a developer-facing control plane where a user can connect a GitHub repository, configure an authorized deployment target, release an application through automated CI/CD, and then monitor its health, errors, infrastructure, and deployment history from one place.
-The key distinction is that SecureDeploy is intended to manage other people's applications as projects, not only its own infrastructure. Achieving that requires project-level isolation, safe build execution, credential management, quotas, and reliable automation—not just additional dashboard cards.
+```
+
+Otherwise, use the scripts defined in the frontend and backend `package.json` files to start the services individually.
+
+> **Note:** Confirm the current Compose filename, scripts, environment variables, and port mappings before running these commands. The exact local setup depends on the repository configuration.
+
+---
+
+## Engineering Challenges
+
+SecureDeploy explores practical challenges in cloud-native application delivery:
+
+- Synchronizing asynchronous CI/CD runs with persistent deployment records.
+- Keeping deployment state consistent across the frontend, backend, database, and Jenkins callbacks.
+- Distinguishing build success from actual application health.
+- Designing project ownership and access control for multi-user deployment management.
+- Correlating release events with application errors and infrastructure metrics.
+- Protecting cloud credentials and controlling deployment execution.
+
+These problems make SecureDeploy more than a basic CRUD dashboard: its intended direction involves orchestration, distributed state, cloud infrastructure, and operational reliability.
+
+---
+
+## Future Vision
+
+The long-term objective is a developer-facing control plane where users can:
+
+- Connect GitHub repositories and create application projects.
+- Configure deployment branches and authorized targets.
+- Trigger repeatable CI/CD workflows.
+- Inspect release history, pipeline stages, logs, and failures.
+- Monitor application health, backend errors, and cloud infrastructure.
+- Diagnose deployment issues from a unified operational view.
+
+The central idea is simple:
+
+**SecureDeploy should help developers understand not only whether an application was deployed, but also whether it is running correctly and what to investigate when it is not.**
+
+---
+
+## Author
+
+**Spandan Choubey**  
+Computer Science & Engineering
+
+[![GitHub](https://img.shields.io/badge/GitHub-Spandanchoubey9-181717?style=for-the-badge&logo=github)](https://github.com/Spandanchoubey9)
+
+**Repository:** [SecureDeploy](https://github.com/Spandanchoubey9/SecureDeploy)
 
 <div align="center">
 
-SecureDeploy — from shipping code to understanding the health of every release.
+---
+
+*SecureDeploy — From code commit to confident release.*
+
 </div>
